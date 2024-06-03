@@ -3,7 +3,10 @@
 #include <algorithm>
 #include <iostream>
 
-void TSPAlgorithms::Backtrack(const Graph &graph, std::vector<int> &path, std::vector<bool> &visited, int current_length, int &min_length, std::vector<int> &best_path) {
+using namespace std;
+
+void TSPAlgorithms::Backtrack(const Graph &graph, vector<int> &path, vector<bool> &visited, 
+                              int current_length, int &min_length, vector<int> &best_path) {
     int n = graph.size();
     if (path.size() == n) {
         int length = current_length + graph[path.back()][path[0]];
@@ -26,17 +29,17 @@ void TSPAlgorithms::Backtrack(const Graph &graph, std::vector<int> &path, std::v
     }
 }
 
-int TSPAlgorithms::Backtracking(const Graph &graph, std::vector<int> &best_path) {
+int TSPAlgorithms::Backtracking(const Graph &graph, vector<int> &best_path) {
     int n = graph.size();
-    std::vector<int> path = {0};
-    std::vector<bool> visited(n, false);
+    vector<int> path = {0};
+    vector<bool> visited(n, false);
     visited[0] = true;
-    int min_length = std::numeric_limits<int>::max();
+    int min_length = numeric_limits<int>::max();
     Backtrack(graph, path, visited, 0, min_length, best_path);
     return min_length;
 }
 
-int TSPAlgorithms::Bound(const Graph &graph, const std::vector<int> &path, const std::vector<bool> &visited) {
+int TSPAlgorithms::Bound(const Graph &graph, const vector<int> &path, const vector<bool> &visited) {
     int n = graph.size();
     int bound = 0;
 
@@ -46,10 +49,10 @@ int TSPAlgorithms::Bound(const Graph &graph, const std::vector<int> &path, const
 
     for (int i = 0; i < n; ++i) {
         if (!visited[i]) {
-            int min_edge = std::numeric_limits<int>::max();
+            int min_edge = numeric_limits<int>::max();
             for (int j = 0; j < n; ++j) {
                 if (!visited[j] && i != j) {
-                    min_edge = std::min(min_edge, graph[i][j]);
+                    min_edge = min(min_edge, graph[i][j]);
                 }
             }
             bound += min_edge;
@@ -59,52 +62,50 @@ int TSPAlgorithms::Bound(const Graph &graph, const std::vector<int> &path, const
     return bound;
 }
 
-int TSPAlgorithms::BFBnB(const Graph &graph, std::vector<int> &best_path) {
+int TSPAlgorithms::BFBnB(const Graph &graph, vector<int> &best_path) {
     int n = graph.size();
     struct Node {
-        std::vector<int> path;
-        std::vector<bool> visited;
-        int cost;
+        vector<int> path;
+        vector<bool> visited;
+        int current_length;
         int bound;
+
+        bool operator>(const Node &other) const {
+            return bound > other.bound;
+        }
     };
 
-    auto compare = [](const Node &a, const Node &b) { return a.bound > b.bound; };
-    std::priority_queue<Node, std::vector<Node>, decltype(compare)> pq(compare);
-
-    Node root;
-    root.path = {0};
-    root.visited = std::vector<bool>(n, false);
+    priority_queue<Node, vector<Node>, greater<Node>> pq;
+    Node root = {{0}, vector<bool>(n, false), 0, 0};
     root.visited[0] = true;
-    root.cost = 0;
     root.bound = Bound(graph, root.path, root.visited);
     pq.push(root);
 
-    int min_length = std::numeric_limits<int>::max();
+    int min_length = numeric_limits<int>::max();
 
     while (!pq.empty()) {
         Node node = pq.top();
         pq.pop();
 
-        if (node.bound < min_length) {
+        if (node.bound >= min_length) continue;
+
+        if (node.path.size() == n) {
+            int length = node.current_length + graph[node.path.back()][node.path[0]];
+            if (length < min_length) {
+                min_length = length;
+                best_path = node.path;
+                best_path.push_back(node.path[0]);
+            }
+        } else {
             for (int i = 0; i < n; ++i) {
                 if (!node.visited[i]) {
                     Node child = node;
                     child.path.push_back(i);
                     child.visited[i] = true;
-                    child.cost += graph[child.path[child.path.size() - 2]][i];
-
-                    if (child.path.size() == n) {
-                        child.cost += graph[child.path.back()][child.path[0]];
-                        if (child.cost < min_length) {
-                            min_length = child.cost;
-                            best_path = child.path;
-                            best_path.push_back(child.path[0]);
-                        }
-                    } else {
-                        child.bound = Bound(graph, child.path, child.visited);
-                        if (child.bound < min_length) {
-                            pq.push(child);
-                        }
+                    child.current_length += graph[node.path.back()][i];
+                    child.bound = child.current_length + Bound(graph, child.path, child.visited);
+                    if (child.bound < min_length) {
+                        pq.push(child);
                     }
                 }
             }

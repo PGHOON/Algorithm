@@ -3,64 +3,69 @@
 #include <vector>
 #include <chrono>
 
-void PrintResult(const std::string &method, int cost, const std::vector<int> &path) {
-    std::cout << method << " Result:\n";
-    std::cout << "Cost: " << cost << "\n";
-    std::cout << "Path: ";
+using namespace std;
+using namespace std::chrono;
+
+void printResult(const string &method, int(*algorithm)(const Graph&, vector<int>&), const Graph &graph) {
+    vector<int> path;
+    int cost;
+    auto start = high_resolution_clock::now();
+    cost = algorithm(graph, path);
+    auto end = high_resolution_clock::now();
+
+    cout << method << " Result:\n";
+    cout << "Cost: " << cost << "\n";
+    cout << "Path: ";
     for (int node : path) {
-        std::cout << node << " ";
+        cout << node << " ";
     }
-    std::cout << "\n";
+    cout << "\n";
+    cout << "Time: " << duration_cast<microseconds>(end - start).count() << "µs\n\n";
 }
 
 int main() {
+    // adjacency matrix
     Graph graph5 = {
-        {0, 2, 9, 10, 1},
-        {1, 0, 6, 4, 1},
-        {15, 7, 0, 8, 3},
-        {6, 3, 12, 0, 4},
-        {3, 6, 8, 4, 0}
+        {0, 5, 15, 20, 25},
+        {5, 0, 35, 25, 30},
+        {15, 35, 0, 30, 20},
+        {20, 25, 30, 0, 15},
+        {25, 30, 20, 15, 0}
     };
 
+    // adjacency matrix
     Graph graph10 = {
-        {0, 29, 20, 21, 16, 31, 100, 12, 4, 31},
-        {29, 0, 15, 29, 28, 40, 72, 21, 29, 41},
-        {20, 15, 0, 15, 14, 25, 81, 9, 23, 27},
-        {21, 29, 15, 0, 4, 12, 92, 12, 25, 13},
-        {16, 28, 14, 4, 0, 16, 94, 9, 20, 16},
-        {31, 40, 25, 12, 16, 0, 95, 24, 36, 3},
-        {100, 72, 81, 92, 94, 95, 0, 90, 101, 99},
-        {12, 21, 9, 12, 9, 24, 90, 0, 15, 25},
-        {4, 29, 23, 25, 20, 36, 101, 15, 0, 35},
-        {31, 41, 27, 13, 16, 3, 99, 25, 35, 0}
+        {0, 75, 80, 35, 45, 15, 45, 50, 40, 55},
+        {75, 0, 65, 45, 70, 30, 10, 5, 25, 30},
+        {80, 65, 0, 25, 20, 50, 55, 35, 50, 65},
+        {35, 45, 25, 0, 60, 50, 30, 60, 40, 15},
+        {45, 70, 20, 60, 0, 60, 85, 75, 45, 40},
+        {15, 30, 50, 50, 60, 0, 55, 20, 35, 40},
+        {45, 10, 55, 30, 85, 55, 0, 65, 35, 25},
+        {50, 5, 35, 60, 75, 20, 65, 0, 70, 55},
+        {40, 25, 50, 40, 45, 35, 35, 70, 0, 45},
+        {55, 30, 65, 15, 40, 40, 25, 55, 45, 0}
     };
 
-    std::vector<int> path;
-    int cost;
+    /*이 경우에는 Backtracking시 0~9순서가 되어서 Backtracking이 더 빠름.
+    Graph graph10 = {
+        {0, 5, 10, 15, 20, 25, 30, 35, 40, 45},
+        {5, 0, 15, 20, 25, 30, 35, 40, 45, 50},
+        {10, 15, 0, 25, 30, 35, 40, 45, 50, 55},
+        {15, 20, 25, 0, 35, 40, 45, 50, 55, 60},
+        {20, 25, 30, 35, 0, 45, 50, 55, 60, 65},
+        {25, 30, 35, 40, 45, 0, 55, 60, 65, 70},
+        {30, 35, 40, 45, 50, 55, 0, 65, 70, 75},
+        {35, 40, 45, 50, 55, 60, 65, 0, 75, 80},
+        {40, 45, 50, 55, 60, 65, 70, 75, 0, 85},
+        {45, 50, 55, 60, 65, 70, 75, 80, 85, 0}
+    };
+    */
 
-    auto start = std::chrono::high_resolution_clock::now();
-    cost = TSPAlgorithms::Backtracking(graph5, path);
-    auto end = std::chrono::high_resolution_clock::now();
-    PrintResult("Backtracking (5 nodes)", cost, path);
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
-
-    start = std::chrono::high_resolution_clock::now();
-    cost = TSPAlgorithms::Backtracking(graph10, path);
-    end = std::chrono::high_resolution_clock::now();
-    PrintResult("Backtracking (10 nodes)", cost, path);
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
-
-    start = std::chrono::high_resolution_clock::now();
-    cost = TSPAlgorithms::BFBnB(graph5, path);
-    end = std::chrono::high_resolution_clock::now();
-    PrintResult("BFBnB (5 nodes)", cost, path);
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
-
-    start = std::chrono::high_resolution_clock::now();
-    cost = TSPAlgorithms::BFBnB(graph10, path);
-    end = std::chrono::high_resolution_clock::now();
-    PrintResult("BFBnB (10 nodes)", cost, path);
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
+    printResult("Backtracking (5 nodes)", TSPAlgorithms::Backtracking, graph5);
+    printResult("BFBnB (5 nodes)", TSPAlgorithms::BFBnB, graph5);
+    printResult("Backtracking (10 nodes)", TSPAlgorithms::Backtracking, graph10);
+    printResult("BFBnB (10 nodes)", TSPAlgorithms::BFBnB, graph10);
 
     return 0;
 }
